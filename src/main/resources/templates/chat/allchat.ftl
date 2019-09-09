@@ -16,23 +16,24 @@
         <h1 class="title">全体用户</h1>
     </header>
     <input hidden id="userName" value="${userName!''}">
-    <div class="content infinite-scroll" style="height: 78%;">
-        <div class="his" id="TTHistory">
+    <div class="content infinite-scroll" style="height: 100%;">
+        <div class="his" id="TTHistory" style="background:url(/image/image-back1.jpeg) no-repeat 4px 5px;" >
 
         </div>
-        <div class="chat">
+        <div class="chat" style="background:url(/image/image-back1.jpeg) no-repeat 4px 5px;">
 
         </div>
     </div>
     <div style="position: absolute;bottom: 0px;width: 100%;">
         <div class="row">
             <div class="col-85">
-                <input class='msg' style="height: 50px;width: 100%;" id="message" >
+                <input class='msg' style="height: 40px;width: 100%;background:green;" id="message" >
             </div>
             <div class="col-35" style="width: auto" ><a href="#" class="button button-big button-fill button-success" style="width: 100%"  onclick="sendd()">发送</a></div>
         </div>
         <div class="col-120" style="width: 100%"><input class="button button-big button-fill button-success" style="width: 100%" type="file" id="file" value="图片"></div>
-        <#--<img src="" height="200" alt="Image preview area..." title="preview-img">-->
+
+        <br/>
     </div>
 </div>
 <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>

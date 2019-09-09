@@ -6,6 +6,22 @@ spring:
     url: jdbc:mysql://localhost:3306/nettychat?characterEncoding=utf-8&useSSL=false
   jpa:
     show-sql: true
+    #配置freemark模板
+  freemarker:
+    allow-request-override: false
+    cache: true
+    check-template-location: true
+    charset: UTF-8
+    content-type: text/html
+    expose-request-attributes: true
+    expose-session-attributes: true
+    expose-spring-macro-helpers: false
+    #prefix=
+    request-context-attribute: request
+    #settings.*=
+    suffix: .ftl
+    template-loader-path: classpath:/templates/
+  #spring.freemarker.view-names= # whitelist of view names that can be resolved
 #    database: oracle
 #    properties:
 #      hibernate:
@@ -36,3 +52,4 @@ netty:
   jksFile:  /securesocket.jks # ssl 加密 jks文件地址
   jksStorePassword: mu$tch8ng3 # 读取jks密码
   jksCertificatePassword: inc0rrect # 读取私钥密码
+
