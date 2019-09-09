@@ -2,8 +2,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     username: root
-    password: 123456
-    url: jdbc:mysql://192.168.1.207:3306/nettychat?characterEncoding=utf-8&useSSL=false
+    password: 541711153
+    url: jdbc:mysql://localhost:3306/nettychat?characterEncoding=utf-8&useSSL=false
   jpa:
     show-sql: true
 #    database: oracle
@@ -13,7 +13,7 @@ spring:
 server:
   servlet:
     context-path: /susu
-  port: 8888
+  port: 8080
 netty:
   webport: 8090 #web聊天室端口
   tcpport: 8092 #tcp协议端口
