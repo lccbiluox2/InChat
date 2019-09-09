@@ -54,9 +54,8 @@ public class NcLoginController {
      * @return
      */
     @GetMapping("/loginsui")
-    public String loginSui(Map<String,Object> map){
-        String view = "redirect:/" + H5Constant.LOGIN_SUI;
-        return view;
+    public ModelAndView loginSui(Map<String,Object> map){
+        return new ModelAndView(H5Constant.LOGIN_SUI);
     }
 
     /**
