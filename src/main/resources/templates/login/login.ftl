@@ -52,7 +52,7 @@
 	<script>
 
     function loginBtn() {
-        $('register').action = "http://192.168.0.101:8080/susu/admin/toLogin";
+        $('register').action = "http://192.168.0.7:8080/susu/admin/toLogin";
         $('register').method = "POST";
         $('#userName').value = $('#userName').value;
         $('#passWord').value = $('#passWord').value;

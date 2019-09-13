@@ -53,7 +53,7 @@
 <#include "../common/floor.ftl">
 <script type="text/javascript">
     function allchat() {
-        document.getElementById('rec').action = "http://192.168.0.101:8080/susu/chat/netty";
+        document.getElementById('rec').action = "http://192.168.0.7:8080/susu/chat/netty";
         document.getElementById('rec').method = "GET";
         document.getElementById('rec').submit();
     }

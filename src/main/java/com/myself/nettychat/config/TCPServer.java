@@ -45,7 +45,7 @@ public class TCPServer {
 
     public void startWeb() throws Exception {
         serverChannel =  serverBootstrap.bind(webPort).sync().channel().closeFuture().sync().channel();
-        String url = "ws://192.168.0.101:8090/ws";
+        String url = "ws://192.168.0.7:8090/ws";
     }
 
     public void startTcp() throws Exception {

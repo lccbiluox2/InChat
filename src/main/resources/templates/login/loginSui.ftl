@@ -103,7 +103,7 @@
     }
 
     function loginBtn() {
-        document.getElementById('rec').action = "http://192.168.0.101:8080/susu/admin/toLogin";
+        document.getElementById('rec').action = "http://192.168.0.7:8080/susu/admin/toLogin";
         document.getElementById('rec').method = "POST";
         document.getElementById('fUserName').value = document.getElementById('userName').value;
         alert( document.getElementById('fUserName').value)
@@ -113,7 +113,7 @@
     }
 
     function regist() {
-        document.getElementById('rec').action = "http://192.168.0.101:8080/susu/admin/toRegister";
+        document.getElementById('rec').action = "http://192.168.0.7:8080/susu/admin/toRegister";
         document.getElementById('rec').method = "POST";
         document.getElementById('fUserName').value = document.getElementById('rUserName').value;
         document.getElementById('fPassWord').value = document.getElementById('rPassWord').value;

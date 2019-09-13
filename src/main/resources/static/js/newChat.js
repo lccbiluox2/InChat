@@ -15,7 +15,7 @@ function generateMixed(n) {
 }
 
 if(window.WebSocket) {
-	socket = new WebSocket("ws://192.168.0.101:8090/ws");
+	socket = new WebSocket("ws://192.168.0.7:8090/ws");
 	// 接收消息的
 	socket.onmessage = function(event) {
         var msg = event.data;

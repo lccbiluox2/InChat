@@ -35,7 +35,7 @@ public class MvcConfiguration extends WebMvcConfigurerAdapter {
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 这里是自定义映射自己的静态资源目录的  注释的这一行访问http://192.168.0.101:8080/upload/product/logo.jpg 相当于访问/static/img/目录下的logo.jpg图片
+        // 这里是自定义映射自己的静态资源目录的  注释的这一行访问http://192.168.0.7:8080/upload/product/logo.jpg 相当于访问/static/img/目录下的logo.jpg图片
         registry.addResourceHandler("/susu/image/**").addResourceLocations("classpath:/static/image/");
 
          // 下面是映射wepapp/upload/produce 映射成静态资源目录

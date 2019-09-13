@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import lombok.experimental.var;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,10 +47,13 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 
     private static final Logger logger = LoggerFactory.getLogger(MyWebSocketServerHandler.class);
 
-    private static final String WEBSOCKET_PATH = "/websocket";
+    private static final String WEBSOCKET_PATH = "/wa";
 
     private WebSocketServerHandshaker handshaker;
 
+    /**
+     * 存储每一个客户端接入进来时的channel对象
+     */
     public static ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     @Autowired
@@ -119,7 +123,7 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 
     private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) {
         // Handle a bad request.
-        if (!req.decoderResult().isSuccess()) {
+         if (!req.decoderResult().isSuccess()) {
             sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST, Unpooled.EMPTY_BUFFER));
             return;
         }
@@ -147,16 +151,30 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
             return;
         }
 
+        // 判断是否为协议升级
+        HttpHeaders headers = req.headers();
+        boolean flag1 = headers.containsValue(CONNECTION, HttpHeaderValues.UPGRADE, true);
+        String upgrade = headers.get(HttpHeaderNames.UPGRADE);
+        boolean flag2 = HttpHeaderValues.WEBSOCKET.contentEqualsIgnoreCase(upgrade);
+        if ( !flag1 && !flag2 ) {
+          return;
+        }
+
         // Handshake
+        //注意，这条地址别被误导了，其实这里填写什么都无所谓，WS协议消息的接收不受这
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
                 getWebSocketLocation(req), null, true, 5 * 1024 * 1024);
         handshaker = wsFactory.newHandshaker(req);
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
+            // 通过它构造握手响应消息返回给客户端，
+            // 同时将WebSocket相关的编码和解码类动态添加到ChannelPipeline中，用于WebSocket消息的编解码，
+            // 添加WebSocketEncoder和WebSocketDecoder之后，服务端就可以自动对WebSocket消息进行编解码了
             handshaker.handshake(ctx.channel(), req);
         }
     }
+
 
 
     private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
@@ -201,6 +219,7 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
     private static void sendHttpResponse(
             ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
         // Generate an error page if response getStatus code is not OK (200).
+        // 返回应答给客户端
         if (res.status().code() != 200) {
             ByteBuf buf = Unpooled.copiedBuffer(res.status().toString(), CharsetUtil.UTF_8);
             res.content().writeBytes(buf);
@@ -209,6 +228,7 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
         }
 
         // Send the response and close the connection if necessary.
+        // 如果是非Keep-Alive，关闭连接
         if (!HttpUtil.isKeepAlive(req) || res.status().code() != 200) {
             // Tell the client we're going to close the connection.
             res.headers().set(CONNECTION, CLOSE);
@@ -220,6 +240,39 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
             ctx.writeAndFlush(res);
         }
     }
+
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        logger.info("handler加入{}",ctx.channel().remoteAddress());
+        channels.add(ctx.channel());
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        //删除存储池对应实例
+        String name = (String) redisTemplate.getName(ctx.channel().id());
+        if(name == null){
+            return;
+        }
+        logger.info("删除对应的handler");
+        redisTemplate.deleteChannel(name);
+        //删除默认存储对应关系
+        redisTemplate.delete(ctx.channel().id());
+        channels.remove(ctx.channel());
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        //在线
+    }
+
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        //掉线
+        msgAsyncTesk.saveChatMsgTask();
+    }
+
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {

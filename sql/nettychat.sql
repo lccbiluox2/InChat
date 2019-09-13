@@ -3,7 +3,7 @@ Navicat MySQL Data Transfer
 
 Source Server         : mypc
 Source Server Version : 50717
-Source Host           : 192.168.0.101:3306
+Source Host           : 192.168.0.7:3306
 Source Database       : nettychat
 
 Target Server Type    : MYSQL
