@@ -15,12 +15,13 @@ function generateMixed(n) {
 }
 
 if(window.WebSocket) {
-	socket = new WebSocket("ws://localhost:8090/ws");
+	socket = new WebSocket("ws://192.168.0.101:8090/ws");
+	// 接收消息的
 	socket.onmessage = function(event) {
         var msg = event.data;
         console.log(msg);
         if(msg instanceof Blob){
-            console.log("blobs");
+            alert("blobs");
             var idran = generateMixed(3);
             var ta = "<div class='msgCente'><img id='"+idran+"' src='' class='chatimg'></div>";
             $('.chat').append(ta);
@@ -35,11 +36,12 @@ if(window.WebSocket) {
             // 调用reader.readAsDataURL()方法，把图片转成base64
             reader.readAsDataURL(msg);
         }
+        // 添加数据到聊天窗口
         if(msg.substring(0, 1) == '[') {
-            var ta = "<div class='msgLeft'><span>"+event.data+"</span></div>";
+            var ta = "<div class='msgLeft' ><span>"+event.data+"</span></div>";
             $('.chat').append(ta);
         } else {
-            var ta = "<div class='msgRight'><span>"+event.data+"</span></div>";
+            var ta = "<div class='msgRight' ><span>"+event.data+"</span></div>";
             $('.chat').append(ta);
         }
 	};
@@ -61,6 +63,7 @@ if(window.WebSocket) {
 		$('.content_bodyer').append(ta);
 }
 
+// 发送消息
 function send(message) {
 	if(!window.WebSocket) {
 		return;

@@ -29,7 +29,7 @@ public class MyFilter implements Filter {
             throws IOException, ServletException {
         // TODO Auto-generated method stub
         HttpServletRequest request = (HttpServletRequest) srequest;
-        System.out.println("this is MyFilter,url :"+request.getRequestURI());
+        logger.info("this is MyFilter,url :"+request.getRequestURI());
         // /welcome
         filterChain.doFilter(srequest, sresponse);
     }

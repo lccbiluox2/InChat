@@ -7,6 +7,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -26,22 +28,35 @@ import java.util.Set;
 @Component
 public class NettyConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(NettyConfig.class);
+
     @Autowired
     private InitNetty nettyAccountConfig;
 
+    @Autowired
+    @Qualifier("somethingChannelInitializer")
+    private NettyWebSocketChannelInitializer nettyWebSocketChannelInitializer;
+
+
     @Bean(name = "bossGroup", destroyMethod = "shutdownGracefully")
     public NioEventLoopGroup bossGroup(){
-        return new NioEventLoopGroup(nettyAccountConfig.getBossThread());
+        int number = nettyAccountConfig.getBossThread();
+        logger.info("初始化bossGroup，线程数：{}",number);
+        return new NioEventLoopGroup(number);
     }
 
     @Bean(name = "workerGroup", destroyMethod = "shutdownGracefully")
     public NioEventLoopGroup workerGroup(){
-        return new NioEventLoopGroup(nettyAccountConfig.getWorkerThread());
+        int number = nettyAccountConfig.getWorkerThread();
+        logger.info("初始化 workerGroup，线程数：{}",number);
+        return new NioEventLoopGroup(number);
     }
 
     @Bean(name = "webSocketAddress")
     public InetSocketAddress tcpPost(){
-        return new InetSocketAddress(nettyAccountConfig.getWebport());
+        int port = nettyAccountConfig.getWebport();
+        logger.info("初始化 webSocketAddress，端口：{}",port);
+        return new InetSocketAddress(port);
     }
 
     @Bean(name = "tcpChannelOptions")
@@ -51,12 +66,9 @@ public class NettyConfig {
         options.put(ChannelOption.SO_KEEPALIVE, nettyAccountConfig.isKeepalive());
         options.put(ChannelOption.SO_BACKLOG, nettyAccountConfig.getBacklog());
         options.put(ChannelOption.SO_REUSEADDR,nettyAccountConfig.isReuseaddr());
+        logger.info("设置channel属性");
         return options;
     }
-
-    @Autowired
-    @Qualifier("somethingChannelInitializer")
-    private NettyWebSocketChannelInitializer nettyWebSocketChannelInitializer;
 
     @Bean(name = "serverBootstrap")
     public ServerBootstrap bootstrap(){
@@ -70,6 +82,7 @@ public class NettyConfig {
         for (@SuppressWarnings("rawtypes") ChannelOption option : keySet) {
             b.option(option, tcpChannelOptions.get(option));
         }
+        logger.info("初始化 serverBootstrap");
         return b;
     }
 }

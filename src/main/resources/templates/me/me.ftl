@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html>
 <#include "../common/header.ftl">
+<style type="text/css">
+
+.exit {
+    text-align:center;
+}
+</style>
 <body>
 <div class="page">
     <header class="bar bar-nav">
@@ -71,6 +77,16 @@
                 </li>
             </ul>
         </div>
+        <div class="list-block">
+            <ul class="list-container">
+                <li class="item-content">
+                    <div class="item-inner">
+                        <span class="icon icon-exit"></span><div class="item-title exit" >退出登录</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
     </div>
 </div>
 <#include "../common/floor.ftl">

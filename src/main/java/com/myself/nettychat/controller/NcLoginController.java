@@ -1,5 +1,6 @@
 package com.myself.nettychat.controller;
 
+import com.myself.nettychat.config.TextWebSocketFrameHandler;
 import com.myself.nettychat.constont.CookieConstant;
 import com.myself.nettychat.constont.H5Constant;
 import com.myself.nettychat.dataobject.User;
@@ -8,6 +9,8 @@ import com.myself.nettychat.repository.UserMsgRepository;
 import com.myself.nettychat.service.UserService;
 import com.myself.nettychat.store.TokenStore;
 import com.myself.nettychat.common.utils.CookieUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,6 +23,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +37,8 @@ import java.util.UUID;
 @Controller
 @RequestMapping("/admin")
 public class NcLoginController {
+
+    private static final Logger logger = LoggerFactory.getLogger(NcLoginController.class);
 
     @Autowired
     private UserService userService;
@@ -108,38 +114,31 @@ public class NcLoginController {
                                 @RequestParam(value = "size",defaultValue = "10") Integer size,
                                 @Valid LoginForm form, BindingResult bindingResult , HttpServletResponse response,
                                 Map<String, Object> map){
-        if (bindingResult.hasErrors()){
-            map.put("msg",bindingResult.getFieldError().getDefaultMessage());
-            return new ModelAndView(H5Constant.LOGIN_SUI,map);
+        String userName = form.getUserName();
+        if(userName == null){
+            logger.info("页面没有传递用户信息");
+            return new ModelAndView(H5Constant.LOGIN,map);
         }
-        try {
-            User user = userService.findByUserName(form.getFUserName());
-            if (user.getPassWord().equals(form.getFPassWord())){
-                //登录成功
-                String token = UUID.randomUUID().toString();
-                //将token信息添加到系统缓存中
-                TokenStore.add(token,user.getId());
-                //将Token信息添加到Cookie中
-                CookieUtil.set(response, CookieConstant.TOKEN,token,CookieConstant.EXPIRE);
-//                Sort sort = new Sort(Sort.Direction.DESC,"id");
-//                Pageable pageable = new PageRequest(page-1,size,sort);
-//                Page<UserMsg> userMsgPage = userMsgRepository.findAll(pageable);
-//                //日期颠倒
-//                List<UserMsg> userMsgList = new ArrayList<>();
-//                for (int i = 0,j = userMsgPage.getContent().size()-1; i < userMsgPage.getContent().size();i++,j--){
-//                    userMsgList.add(userMsgPage.getContent().get(j));
-//                }
-//                map.put("userMsgList",userMsgList);
-//                map.put("userName",user.getUserName());
-                return new ModelAndView(H5Constant.HOME);
-            }else{
-                map.put("msg","密码错误");
-                return new ModelAndView(H5Constant.LOGIN_SUI,map);
-            }
-        }catch (Exception e){
-            map.put("msg","用户不存在");
-            return new ModelAndView(H5Constant.LOGIN_SUI,map);
+        User user = userService.findByUserName(userName);
+        if(user == null){
+            logger.info("该用户未注册");
+            return new ModelAndView(H5Constant.LOGIN,map);
         }
+        if (!user.getPassWord().equals(form.getPassWord())) {
+            logger.info("密码不正确");
+            return new ModelAndView(H5Constant.LOGIN,map);
+        }
+        logger.info("验证通过");
+        //登录成功
+        String token = UUID.randomUUID().toString();
+        //将token信息添加到系统缓存中
+        TokenStore.add(token,user.getId());
+        //将Token信息添加到Cookie中
+        CookieUtil.set(response, CookieConstant.TOKEN,token,CookieConstant.EXPIRE);
+        logger.info("缓存到cookie中");
+
+        return new ModelAndView(H5Constant.HOME);
+
     }
 
 }

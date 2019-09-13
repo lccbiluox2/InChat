@@ -1,5 +1,7 @@
 package com.myself.nettychat.constont;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -16,16 +18,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class LikeRedisTemplate {
 
-    private Map<Object,Object> RedisMap = new ConcurrentHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(LikeRedisTemplate.class);
 
-    private Map<Object,Object> SecondRedisMap = new ConcurrentHashMap<>();
+    private Map<Object,Object> redisMap = new ConcurrentHashMap<>();
+
+    private Map<Object,Object> secondRedisMap = new ConcurrentHashMap<>();
 
     /**存放链接池实例*/
-    private Map<Object,Object> ChannelRedisMap = new ConcurrentHashMap<>();
+    private Map<Object,Object> channelRedisMap = new ConcurrentHashMap<>();
 
     public void save(Object id,Object name){
-        RedisMap.put(id,name);
-        SecondRedisMap.put(name,id);
+        redisMap.put(id,name);
+        secondRedisMap.put(name,id);
     }
 
     /**
@@ -34,7 +38,7 @@ public class LikeRedisTemplate {
      * @param channel Netty链接实例
      */
     public void saveChannel(Object name,Object channel){
-        ChannelRedisMap.put(name,channel);
+        channelRedisMap.put(name,channel);
     }
 
     /**
@@ -42,7 +46,14 @@ public class LikeRedisTemplate {
      * @param name 登录用户名
      */
     public void deleteChannel(Object name){
-        ChannelRedisMap.remove(name);
+        if(name == null){
+            return;
+        }
+        Object result = channelRedisMap.get(name);
+        if(result != null) {
+            logger.info("channelRedisMap中删除");
+            channelRedisMap.remove(name);
+        }
     }
 
     /**
@@ -51,7 +62,7 @@ public class LikeRedisTemplate {
      * @return {@link io.netty.channel.Channel 链接实例}
      */
     public Object getChannel(Object name){
-        return ChannelRedisMap.get(name);
+        return channelRedisMap.get(name);
     }
 
     /**
@@ -59,7 +70,7 @@ public class LikeRedisTemplate {
      * @return 在线数
      */
     public Integer getSize(){
-        return ChannelRedisMap.size();
+        return channelRedisMap.size();
     }
 
     /**
@@ -68,15 +79,15 @@ public class LikeRedisTemplate {
      * @return 用户名称
      */
     public Object getName(Object id){
-        return RedisMap.get(id);
+        return redisMap.get(id);
     }
 
 
     public boolean check(Object id,Object name){
-        if (SecondRedisMap.get(name) == null){
+        if (secondRedisMap.get(name) == null){
             return true;
         }
-        if (id.equals(SecondRedisMap.get(name))){
+        if (id.equals(secondRedisMap.get(name))){
             return true;
         }else{
             return false;
@@ -84,9 +95,17 @@ public class LikeRedisTemplate {
     }
 
     public void delete(Object id){
+        logger.info("删除：{}",id);
+        if(id == null){
+            return;
+        }
+        Object result = redisMap.get(id);
+        if(result == null){
+            return;
+        }
         try {
-            SecondRedisMap.remove(RedisMap.get(id));
-            RedisMap.remove(id);
+            secondRedisMap.remove(redisMap.get(id));
+            redisMap.remove(id);
         }catch (NullPointerException e){
             e.printStackTrace();
         }
@@ -98,7 +117,7 @@ public class LikeRedisTemplate {
      */
     public Object getOnline() {
         List<Object> result = new ArrayList<>();
-        for (Object key:ChannelRedisMap.keySet()){
+        for (Object key:channelRedisMap.keySet()){
             result.add(key);
         }
         return result;

@@ -15,6 +15,8 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -31,7 +33,10 @@ import java.io.FileOutputStream;
 @Component
 @Qualifier("textWebSocketFrameHandler")
 @ChannelHandler.Sharable
+@Deprecated
 public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<Object>{
+
+    private static final Logger logger = LoggerFactory.getLogger(TextWebSocketFrameHandler.class);
 
     public static ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
@@ -46,8 +51,11 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<Objec
     protected void channelRead0(ChannelHandlerContext ctx,
                                 Object msg) throws Exception {
         if(msg instanceof TextWebSocketFrame){
+            logger.info("读取到文本类型的web数据");
             textWebSocketFrame(ctx, (TextWebSocketFrame) msg);
-        }else if(msg instanceof WebSocketFrame){ //websocket帧类型 已连接
+        }else if(msg instanceof WebSocketFrame){
+            //websocket帧类型 已连接
+            logger.info("读取到WebSocketFrame类型的web数据");
             handleWebSocketFrame(ctx, (WebSocketFrame) msg);
         }
     }
@@ -72,11 +80,16 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<Objec
         }
     }
 
+    /**
+     * 处理数据
+     * @param ctx
+     * @param msg
+     */
     private void textWebSocketFrame(ChannelHandlerContext ctx, TextWebSocketFrame msg) {
         Channel incoming = ctx.channel();
         String rName = StringUtil.getName(msg.text());
         String rMsg = StringUtil.getMsg(msg.text());
-        if (rMsg.equals("")){
+        if (rMsg.isEmpty()){
             return;
         }
         //用户登录判断
@@ -105,7 +118,7 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<Objec
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        System.out.println(ctx.channel().remoteAddress());
+        logger.info("handler加入{}",ctx.channel().remoteAddress());
         channels.add(ctx.channel());
     }
 
@@ -113,6 +126,10 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<Objec
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         //删除存储池对应实例
         String name = (String) redisTemplate.getName(ctx.channel().id());
+        if(name == null){
+           return;
+        }
+        logger.info("删除对应的handler");
         redisTemplate.deleteChannel(name);
         //删除默认存储对应关系
         redisTemplate.delete(ctx.channel().id());

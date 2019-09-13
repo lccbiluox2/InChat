@@ -75,11 +75,11 @@ API调用Netty长链接执行发送消息（在线数、用户列表）：https:
 
 >再执行TCPTestClient发送数据，请勿随意更改发送格式（通信协议来的）
 
->http://localhost:8080/susu/admin/loginsui 启动访问路径
+>http://192.168.0.101:8080/susu/admin/loginsui 启动访问路径
 
 >mqtt协议测试在mqttclient包下
 
->http://localhost:8080/susu/swagger-ui.html 查看API文档
+>http://192.168.0.101:8080/susu/swagger-ui.html 查看API文档
 
 ## 效果图 
 

@@ -7,6 +7,8 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -22,8 +24,10 @@ import org.springframework.stereotype.Component;
 @Qualifier("somethingChannelInitializer")
 public class NettyWebSocketChannelInitializer extends ChannelInitializer<SocketChannel> {
 
+    private static final Logger logger = LoggerFactory.getLogger(NettyWebSocketChannelInitializer.class);
+
     @Autowired
-    private TextWebSocketFrameHandler textWebSocketFrameHandler;
+    private MyWebSocketServerHandler myWebSocketServerHandler;
 
     @Override
     public void initChannel(SocketChannel ch) throws Exception {
@@ -33,7 +37,9 @@ public class NettyWebSocketChannelInitializer extends ChannelInitializer<SocketC
         pipeline.addLast(new HttpObjectAggregator(65536));
         pipeline.addLast(new ChunkedWriteHandler());
         pipeline.addLast(new WebSocketServerProtocolHandler("/ws"));
-        pipeline.addLast(textWebSocketFrameHandler);   //这里不能使用new，不然在handler中不能注入依赖
+        logger.info("初始化MyWebSocketServerHandler");
+        //这里不能使用new，不然在handler中不能注入依赖
+        pipeline.addLast(myWebSocketServerHandler);
 
     }
 

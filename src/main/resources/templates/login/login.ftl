@@ -39,7 +39,7 @@
 							<#--<span>${msg!''}</span>-->
 						</div>
 					</div>
-					<input type="submit" class="btn1" value='登陆' />
+					<input type="submit" class="btn1" value='登陆' onclick="loginBtn()" />
                     <!--提示密码错误或用户名错误-->
                     <div class="tips">${msg!''}</div>
 				<form>
@@ -50,8 +50,15 @@
     <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
 	<script src='/susu/js/registered.js'></script>
 	<script>
-        if("${msg!''}" != ''){
-        MsgTo();
-        }
+
+    function loginBtn() {
+        $('register').action = "http://192.168.0.101:8080/susu/admin/toLogin";
+        $('register').method = "POST";
+        $('#userName').value = $('#userName').value;
+        $('#passWord').value = $('#passWord').value;
+        $('register').submit();
+    }
+
+
     </script>
 </html>

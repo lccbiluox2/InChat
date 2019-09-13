@@ -2,6 +2,9 @@ package com.myself.nettychat.config;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -42,6 +45,7 @@ public class TCPServer {
 
     public void startWeb() throws Exception {
         serverChannel =  serverBootstrap.bind(webPort).sync().channel().closeFuture().sync().channel();
+        String url = "ws://192.168.0.101:8090/ws";
     }
 
     public void startTcp() throws Exception {
