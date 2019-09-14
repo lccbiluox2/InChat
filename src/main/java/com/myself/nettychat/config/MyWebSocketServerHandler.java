@@ -43,6 +43,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 @Component
 @Qualifier("myWebSocketServerHandler")
 @ChannelHandler.Sharable
+@Deprecated
 public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(MyWebSocketServerHandler.class);
@@ -64,14 +65,10 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
     private MsgAsyncTesk msgAsyncTesk;
 
 
-
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof FullHttpRequest) {
             handleHttpRequest(ctx, (FullHttpRequest) msg);
-        } else if(msg instanceof TextWebSocketFrame){
-            logger.info("读取到文本类型的web数据");
-            textWebSocketFrame(ctx, (TextWebSocketFrame) msg);
         } else if (msg instanceof WebSocketFrame) {
             //websocket帧类型 已连接
             logger.info("读取到WebSocketFrame类型的web数据");
@@ -82,6 +79,7 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 
     /**
      * 处理数据
+     *
      * @param ctx
      * @param msg
      */
@@ -89,18 +87,18 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
         Channel incoming = ctx.channel();
         String rName = StringUtil.getName(msg.text());
         String rMsg = StringUtil.getMsg(msg.text());
-        if (rMsg.isEmpty()){
+        if (rMsg.isEmpty()) {
             return;
         }
         //用户登录判断
-        if (redisTemplate.check(incoming.id(),rName)){
+        if (redisTemplate.check(incoming.id(), rName)) {
             //临时存储聊天数据
-            cacheTemplate.save(rName,rMsg);
+            cacheTemplate.save(rName, rMsg);
             //存储随机链接ID与对应登录用户名
-            redisTemplate.save(incoming.id(),rName);
+            redisTemplate.save(incoming.id(), rName);
             //存储登录用户名与链接实例，方便API调用链接实例
-            redisTemplate.saveChannel(rName,incoming);
-        }else{
+            redisTemplate.saveChannel(rName, incoming);
+        } else {
             incoming.writeAndFlush(new TextWebSocketFrame("存在二次登陆，系统已为你自动断开本次链接"));
             channels.remove(ctx.channel());
             ctx.close();
@@ -108,10 +106,10 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
         }
         for (Channel channel : channels) {
             //将当前每个聊天内容进行存储
-            if (channel != incoming){
-                channel.writeAndFlush(new TextWebSocketFrame( "[" + rName + "]" + rMsg));
+            if (channel != incoming) {
+                channel.writeAndFlush(new TextWebSocketFrame("[" + rName + "]" + rMsg));
             } else {
-                channel.writeAndFlush(new TextWebSocketFrame(rMsg + "[" + rName + "]" ));
+                channel.writeAndFlush(new TextWebSocketFrame(rMsg + "[" + rName + "]"));
             }
         }
     }
@@ -123,7 +121,7 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 
     private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) {
         // Handle a bad request.
-         if (!req.decoderResult().isSuccess()) {
+        if (!req.decoderResult().isSuccess()) {
             sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST, Unpooled.EMPTY_BUFFER));
             return;
         }
@@ -156,8 +154,8 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
         boolean flag1 = headers.containsValue(CONNECTION, HttpHeaderValues.UPGRADE, true);
         String upgrade = headers.get(HttpHeaderNames.UPGRADE);
         boolean flag2 = HttpHeaderValues.WEBSOCKET.contentEqualsIgnoreCase(upgrade);
-        if ( !flag1 && !flag2 ) {
-          return;
+        if (!flag1 && !flag2) {
+            return;
         }
 
         // Handshake
@@ -176,7 +174,6 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
     }
 
 
-
     private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
 
         // Check for closing frame
@@ -189,30 +186,44 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
             return;
         }
         if (frame instanceof TextWebSocketFrame) {
+            logger.info("读取到文本类型的web数据");
+            textWebSocketFrame(ctx, (TextWebSocketFrame) frame);
             // Echo the frame
-            ctx.write(frame.retain());
+//            ctx.write(frame.retain());
             return;
         }
         if (frame instanceof BinaryWebSocketFrame) {
             // Echo the frame
+            logger.info("读取到二进制数据");
+            binaryWebSocketFrame(ctx, (BinaryWebSocketFrame) frame);
             ctx.write(frame.retain());
         }
-        if(frame instanceof BinaryWebSocketFrame){
+        if (frame instanceof BinaryWebSocketFrame) {
             //返回客户端
-            BinaryWebSocketFrame imgBack= (BinaryWebSocketFrame) frame.copy();
-            for (Channel channel : channels){
+            BinaryWebSocketFrame imgBack = (BinaryWebSocketFrame) frame.copy();
+            for (Channel channel : channels) {
                 channel.writeAndFlush(imgBack.retain());
             }
             //保存服务器
-            BinaryWebSocketFrame img= (BinaryWebSocketFrame) frame;
-            ByteBuf byteBuf=img.content();
+            BinaryWebSocketFrame img = (BinaryWebSocketFrame) frame;
+            ByteBuf byteBuf = img.content();
             try {
-                FileOutputStream outputStream=new FileOutputStream("D:\\a.jpg");
-                byteBuf.readBytes(outputStream,byteBuf.capacity());
+                FileOutputStream outputStream = new FileOutputStream("D:\\a.jpg");
+                byteBuf.readBytes(outputStream, byteBuf.capacity());
                 byteBuf.clear();
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void binaryWebSocketFrame(ChannelHandlerContext ctx, BinaryWebSocketFrame frame) {
+        System.out.println("二进制数据接收");
+        ByteBuf buf = frame.content();
+
+        for (int i = 0; i < buf.capacity(); i++){
+            byte b = buf.getByte(i);
+            System.out.println("byte:"+b);
         }
     }
 
@@ -243,7 +254,7 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        logger.info("handler加入{}",ctx.channel().remoteAddress());
+        logger.info("handler加入{}", ctx.channel().remoteAddress());
         channels.add(ctx.channel());
     }
 
@@ -251,7 +262,7 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         //删除存储池对应实例
         String name = (String) redisTemplate.getName(ctx.channel().id());
-        if(name == null){
+        if (name == null) {
             return;
         }
         logger.info("删除对应的handler");
@@ -281,7 +292,7 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
     }
 
     private static String getWebSocketLocation(FullHttpRequest req) {
-        String location =  req.headers().get(HttpHeaderNames.HOST) + WEBSOCKET_PATH;
+        String location = req.headers().get(HttpHeaderNames.HOST) + WEBSOCKET_PATH;
         if (WebSocketServer.SSL) {
             return "wss://" + location;
         } else {
