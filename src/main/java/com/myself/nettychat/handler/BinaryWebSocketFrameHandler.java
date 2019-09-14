@@ -33,7 +33,11 @@ public class BinaryWebSocketFrameHandler extends SimpleChannelInboundHandler<Bin
         byteBuf.writeBytes(msg.content());
 
         for (Channel channel : channels) {
-            ctx.writeAndFlush(new BinaryWebSocketFrame(byteBuf));
+            log.info("写入到channel中"+channel.remoteAddress());
+            /**
+             * 这里需要加入写入对方的channle才能写入
+             */
+            channel.pipeline().writeAndFlush(new BinaryWebSocketFrame(byteBuf));
         }
     }
 }

@@ -19,7 +19,6 @@ if(window.WebSocket) {
 	// 接收消息的
 	socket.onmessage = function(event) {
         var msg = event.data;
-        console.log(msg);
         if(msg instanceof Blob){
             var idran = generateMixed(3);
             var ta = "<div class='msgCente'><img id='"+idran+"' src='' class='chatimg'></div>";
